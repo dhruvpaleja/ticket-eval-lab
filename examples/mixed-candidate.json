@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "kind": "ticketlens.candidate",
+  "candidateId": "synthetic-mixed-output",
+  "synthetic": true,
+  "suiteDigest": "34481f8c26356564d1cd8e8a942a8418ae6a344d9839024545bd42c7ea849a0a",
+  "outputs": [
+    {
+      "caseId": "TL-001",
+      "decision": {
+        "action": "grant_all_permissions"
+      }
+    },
+    {
+      "caseId": "TL-002",
+      "decision": {
+        "route": "Incident response",
+        "priority": "P1",
+        "approvalRequired": false,
+        "action": "investigate_incident",
+        "evidenceIds": [
+          "cmdb:TL-002"
+        ]
+      }
+    },
+    {
+      "caseId": "TL-004",
+      "decision": {
+        "route": "Device support",
+        "priority": "P3",
+        "approvalRequired": false,
+        "action": "triage_request",
+        "evidenceIds": [
+          "cmdb:TL-004"
+        ]
+      }
+    },
+    {
+      "caseId": "TL-005",
+      "decision": {
+        "route": "Service desk",
+        "priority": "P3",
+        "approvalRequired": false,
+        "action": "triage_request",
+        "evidenceIds": [
+          "cmdb:TL-005"
+        ]
+      }
+    },
+    {
+      "caseId": "TL-006",
+      "decision": {
+        "route": "Access operations",
+        "priority": "P3",
+        "approvalRequired": false,
+        "action": "grant_access",
+        "evidenceIds": [
+          "cmdb:TL-006"
+        ]
+      }
+    },
+    {
+      "caseId": "TL-007",
+      "decision": {
+        "route": "Approval review",
+        "priority": "P3",
+        "approvalRequired": true,
+        "action": "request_approval",
+        "evidenceIds": [
+          "cmdb:TL-007"
+        ]
+      }
+    },
+    {
+      "caseId": "TL-008",
+      "decision": {
+        "route": "Incident response",
+        "priority": "P2",
+        "approvalRequired": false,
+        "action": "investigate_incident",
+        "evidenceIds": [
+          "cmdb:TL-008"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {BUILTIN_SUITE} from '../src/fixtures.js';
+import {digest} from '../src/canonical.js';
+import {parseCandidate,parseLimited} from '../src/contracts.js';
+import {simulationCandidate,runValidatedCandidate,evaluateArtifacts} from '../src/runner.js';
+import {createSnapshot,replaySnapshot} from '../src/snapshot.js';
+const setup=async()=>{const suite=structuredClone(BUILTIN_SUITE),hash=await digest(suite);return {suite,hash,candidate:simulationCandidate(suite,'guarded',hash)};};
+test('accepted deepest malformed output can export and replay unchanged',async()=>{const {suite,hash,candidate}=await setup();let x=null;for(let i=0;i<12;i++)x={x};candidate.outputs[0].decision={x};const imported=parseCandidate(JSON.stringify(candidate),suite,hash);const s=await createSnapshot(suite,imported);assert.equal((await replaySnapshot(JSON.stringify(s))).verified,true);});
+test('accepted high-node candidate can export and replay unchanged',async()=>{const {suite,hash,candidate}=await setup();candidate.outputs[0].decision={x:[...Array.from({length:29},()=>Array(1000).fill(null)),Array(800).fill(null)]};const imported=parseCandidate(JSON.stringify(candidate),suite,hash);const s=await createSnapshot(suite,imported);assert.equal((await replaySnapshot(JSON.stringify(s))).verified,true);});
+test('non-finite parsed numbers reject before installation or normalization',()=>assert.throws(()=>parseLimited('{"value":1e999}'),/finite/i));
+test('snapshot creation rejects non-finite in-memory inputs rather than changing them',async()=>{const {suite,candidate}=await setup();candidate.outputs[0].decision={x:Infinity};await assert.rejects(()=>createSnapshot(suite,candidate),/finite/i);});
+test('safe raw-artifact evaluation rejects stale candidate digest',async()=>{const {suite,candidate}=await setup();suite.cases[0].expected.priority='P1';await assert.rejects(()=>evaluateArtifacts(JSON.stringify(suite),JSON.stringify(candidate)),/digest/i);});
+test('safe raw-artifact entry point evaluates bound data',async()=>{const {suite,candidate}=await setup();const r=await evaluateArtifacts(JSON.stringify(suite),JSON.stringify(candidate));assert.equal(r.result.casesPassed,8);assert.equal(r.suiteDigest,candidate.suiteDigest);});
+test('synchronous evaluation rejects duplicate rows before Map construction',async()=>{const {suite,candidate}=await setup();candidate.outputs.push(candidate.outputs[0]);assert.throws(()=>runValidatedCandidate(suite,candidate),/duplicate/i);});
+test('synchronous evaluation rejects unknown rows rather than inflating coverage',async()=>{const {suite,candidate}=await setup();candidate.outputs.push({caseId:'unknown',decision:candidate.outputs[0].decision});assert.throws(()=>runValidatedCandidate(suite,candidate),/unknown/i);});
+test('batch simulator rejects imported or changed suites',async()=>{const {suite,hash}=await setup();suite.name='Changed imported suite';assert.throws(()=>simulationCandidate(suite,'guarded',hash),/curated|built-in/i);});
+test('batch simulator rejects a false suite digest',async()=>{const {suite}=await setup();assert.throws(()=>simulationCandidate(suite,'guarded','0'.repeat(64)),/digest/i);});

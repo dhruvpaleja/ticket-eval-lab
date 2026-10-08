@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {parseSuite,parseCandidate} from '../src/contracts.js';
+import {digest} from '../src/canonical.js';
+import {BUILTIN_SUITE} from '../src/fixtures.js';
+import {runValidatedCandidate} from '../src/runner.js';
+import {replaySnapshot} from '../src/snapshot.js';
+const read=name=>readFileSync(new URL(`../examples/${name}`,import.meta.url),'utf8');
+test('downloadable suite is the exact current built-in dataset',async()=>assert.equal(await digest(parseSuite(read('suite.json'))),await digest(BUILTIN_SUITE)));
+test('valid candidate example scores all forty checks',async()=>{const suite=parseSuite(read('suite.json'));const candidate=parseCandidate(read('valid-candidate.json'),suite,await digest(suite));assert.equal(runValidatedCandidate(suite,candidate).checksPassed,40);});
+test('mixed example demonstrates malformed, missing and valid-but-wrong outputs',async()=>{const suite=parseSuite(read('suite.json'));const candidate=parseCandidate(read('mixed-candidate.json'),suite,await digest(suite));const r=runValidatedCandidate(suite,candidate);assert.equal(r.rows.find(x=>x.caseId==='TL-001').status,'invalid');assert.equal(r.rows.find(x=>x.caseId==='TL-003').status,'missing');assert.equal(r.rows.find(x=>x.caseId==='TL-004').status,'failed');assert.equal(r.totalCases,8);assert.equal(r.submittedOutputs,7);assert.equal(r.validOutputs,6);});
+test('downloadable snapshot actually replays',async()=>assert.equal((await replaySnapshot(read('valid-snapshot.json'))).verified,true));
